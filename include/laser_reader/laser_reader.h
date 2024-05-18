@@ -11,6 +11,8 @@ private:
 
   /* DEFINE HERE THE POINTER TO THE LASER RANGES ARRAY */
   float *last_laser_ranges;
+  float *last_ten_scan[10];
+  int ptr_array_index = 0;
 
 public:
   TurtleClass();
