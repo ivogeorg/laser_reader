@@ -133,6 +133,7 @@ include
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_node src/laser_reader.cpp)
+add_executable(laser_subscriber_node src/laser_subscriber.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -146,6 +147,9 @@ add_executable(${PROJECT_NAME}_node src/laser_reader.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(laser_subscriber_node
   ${catkin_LIBRARIES}
 )
 
