@@ -1,37 +1,42 @@
 #include "ros/subscriber.h"
 #include <cmath>
+#include <memory>
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
 
 class LaserSubscriberNode {
   ros::NodeHandle nh_;
   ros::Subscriber sub_;
-  const sensor_msgs::LaserScan *scan_ptr_;
+  std::shared_ptr<sensor_msgs::LaserScan> scan_ptr_;
   float closest_obstacle_angle_;
   float closest_obstacle_distance_;
 
   void laserScanCallback(const sensor_msgs::LaserScan::ConstPtr &msg) {
-    scan_ptr_ = msg.get();
+    scan_ptr_ = std::make_shared<sensor_msgs::LaserScan>(*msg);
 
-    if (!scan_ptr_->ranges.empty()) {
-      float range = scan_ptr_->ranges[360];
-      ROS_INFO("Range in front: %f", range);
-    }
+    if (scan_ptr_ != nullptr) {
 
-    int index = 0;
-    for (int i = 0; i < scan_ptr_->ranges.size(); ++i)
-      if (!std::isinf(scan_ptr_->ranges[i]) &&
-          scan_ptr_->ranges[i] < closest_obstacle_distance_) {
-        closest_obstacle_distance_ = scan_ptr_->ranges[i];
-        index = i;
+      if (!scan_ptr_->ranges.empty()) {
+        float range = scan_ptr_->ranges[360];
+        ROS_INFO("Range in front: %f", range);
       }
-    closest_obstacle_angle_ = msg->angle_min + index * msg->angle_increment;
 
-    printClosestObstacleDistance();
+      int index = 0;
+      for (int i = 0; i < scan_ptr_->ranges.size(); ++i)
+        if (!std::isinf(scan_ptr_->ranges[i]) &&
+            scan_ptr_->ranges[i] < closest_obstacle_distance_) {
+          closest_obstacle_distance_ = scan_ptr_->ranges[i];
+          index = i;
+        }
+      closest_obstacle_angle_ = msg->angle_min + index * msg->angle_increment;
+
+      printClosestObstacleDistance();
+    }
   }
 
   void printClosestObstacleDistance() const {
-    ROS_INFO("Distance to closest obstacle (m): %f", closest_obstacle_distance_);
+    ROS_INFO("Distance to closest obstacle (m): %f",
+             closest_obstacle_distance_);
     ROS_INFO("Angle to closest obstacle (rad): %f", closest_obstacle_angle_);
   };
 
@@ -41,7 +46,7 @@ public:
                            &LaserSubscriberNode::laserScanCallback, this)},
         scan_ptr_{nullptr}, closest_obstacle_distance_{1000} {}
 
-  ~LaserSubscriberNode() { delete scan_ptr_; }
+  ~LaserSubscriberNode() = default;
 };
 
 int main(int argc, char **argv) {
